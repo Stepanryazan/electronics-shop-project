@@ -70,3 +70,8 @@ class Item:
     def string_to_number(number):
         return int(float(number))
 
+    def __repr__(self):
+        return f"Item('{self.name}', {self.price}, {self.quantity})"
+
+    def __str__(self):
+        return self.name
