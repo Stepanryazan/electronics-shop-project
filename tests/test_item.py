@@ -50,3 +50,11 @@ def test_repr_str(position):
     item = Item('Смартфон', 10000, 20)
     assert repr(item) == "Item('Смартфон', 10000, 20)"
     assert str(item) == 'Смартфон'
+
+
+def test_add(position, phone1):
+    """
+    Тест метода add
+    """
+
+    assert position + phone1 == 11
