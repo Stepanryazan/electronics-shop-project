@@ -1,4 +1,16 @@
 import csv
+import os
+
+
+
+class InstantiateCSVError(Exception):
+    def __init__(self, *args, **kwargs):
+        self.massage = "Файл item.csv поврежден"
+
+
+class FileNotFoundError(Exception):
+    def __init__(self, *args, **kwargs):
+        self.massage = "Отсутствует файл item.csv"
 
 
 class Item:
@@ -16,24 +28,10 @@ class Item:
         :param price: Цена за единицу товара.
         :param quantity: Количество товара в магазине.
         """
-
         self.__name = name
         self.price = price
-        self.quantity = quantity
-        self.all.append(self)
-
-    @property
-    def name(self):
-        return f"{self.__name}"
-
-    @name.setter
-    def name(self, value):
-        if len(value) <= 10:
-            self.__name = value
-            print(f'Корректное название - {value}')
-        else:
-            self.__name = value[:10]
-            print(f'Длинное слово - {value[:10]}')
+        self. quantity = quantity
+        Item.all.append(self)
 
     def calculate_total_price(self) -> float:
         """
@@ -41,47 +39,73 @@ class Item:
 
         :return: Общая стоимость товара.
         """
-        all_price = self.quantity * self.price
-        return all_price
+        cost_product = self.price * self.quantity
+        return cost_product
 
     def apply_discount(self) -> None:
         """
         Применяет установленную скидку для конкретного товара.
         """
-        self.price = self.price - self.price * self.pay_rate
+        self.price = self.price * self.pay_rate
+
+    @property
+    def name(self):
+        return self.__name
 
     @name.setter
     def name(self, value):
-        self.__name = value
+        """
+        Проверяет, что длина наименования товара не больше 10 симвовов.
+        В противном случае,
+        обрезать строку (оставить первые 10 символов)
+        """
+        if len(value) <= 10:
+            self.__name = value
+            print(f'Корректное название - {value}')
+        else:
+            self.__name = value[:10]
+            print(f'Длинное слово - {value[:10]}')
 
     @classmethod
-    def instantiate_from_csv(cls, file_name):
-        cls.all.clear()
-        with open(file_name, 'r') as f:
+    def instantiate_from_csv(cls):
+        """
+        Класс-метод, инициализирующий экземпляры класса `Item`
+        данными из файла _src/items.csv_
+        """
+        if not os.path.join(os.path.dirname(__file__), 'items.csv'):
+            raise FileNotFoundError("Отсутствует файл item.csv")
+        else:
+            cls.all.clear()
+        path = os.path.join(os.path.dirname(__file__), 'items.csv')
+        with open(path, 'r', newline='\n', encoding='UTF-8') as f:
             reader = csv.DictReader(f)
             items = list(reader)
-            for item in items:
-                name = item['name']
-                price = cls.string_to_number(item['price'])
-                quantity = int(item['quantity'])
-                cls(name, price, quantity)
+        for item in items:
+            if item['name'] not in items or item['price'] not in items or item['quantity'] not in items:
+                raise InstantiateCSVError("Файл item.csv поврежден")
+            else:
+                print(cls(name=item.get('name'),
+                          price=item.get('price'),
+                          quantity=item.get('quantity')))
 
     @staticmethod
-    def string_to_number(number):
-        return int(float(number))
+    def string_to_number(name):
+        """
+        Статический метод, возвращающий число из числа-строки
+        """
+        return int(float(name))
 
-    def __repr__(self):
-        return f"Item('{self.name}', {self.price}, {self.quantity})"
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}('{self.name}', {self.price}, {self.quantity})"
 
-    def __str__(self):
-        return self.name
+    def __str__(self) -> str:
+        return f'{self.name}'
 
     def __add__(self, other):
         """
-        Метод сложения количества товаров двух классов
-         """
-
-        if not isinstance(other, Item):
-            raise ValueError("Количество физических SIM-карт должно быть целым числом больше нуля.")
-        else:
+        Реализация возможности сложения экземпляров класса `Phone` и `Item`
+        (сложение по количеству товара в магазине)
+        """
+        if isinstance(other, Item):
             return self.quantity + other.quantity
+        return ValueError("Складывать можно только объекты классов с родительским классом Item")
